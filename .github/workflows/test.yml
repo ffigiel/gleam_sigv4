@@ -10,12 +10,20 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      minio:
+        image: mosuka/minio:latest
+        env:
+          MINIO_ROOT_USER: gleam123
+          MINIO_ROOT_PASSWORD: gleam456
+        ports:
+          - 9008:9000
     steps:
       - uses: actions/checkout@v2.0.0
       - uses: erlef/setup-beam@v1.9.0
         with:
           otp-version: "23.2"
-          gleam-version: "0.21.1"
+          gleam-version: "0.20.1"
       - run: gleam format --check src test
       - run: gleam deps download
       - run: gleam test

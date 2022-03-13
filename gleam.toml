@@ -16,4 +16,5 @@ gleam_crypto = "~> 0.3"
 base16 = "~> 2.0"
 
 [dev-dependencies]
+gleam_hackney = "~> 0.2"
 gleeunit = "~> 0.6"
