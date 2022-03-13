@@ -1,24 +1,25 @@
 # sigv4
 
-[![Package Version](https://img.shields.io/hexpm/v/sigv4)](https://hex.pm/packages/sigv4)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/sigv4/)
+(WIP) Signature Version 4 library written in Gleam
 
-A Gleam project
+## Usage
 
-## Quick start
+```gleam
+import gleam/http/request
+import sigv4
 
-```sh
-gleam run   # Run the project
-gleam test  # Run the tests
-gleam shell # Run an Erlang shell
+let params = sigv4.Params(
+  debug: False,
+  signed_headers: ["Host", "X-Amz-Content-Sha256", "X-Amz-Date"],
+  datetime: universaltime(),
+  region: "us-east-1",
+  service: "s3",
+  access_key: "...",
+  secret_key: "...",
+)
+let req =
+  request.new()
+  |> // build your request...
+  |> sigv4.sign_request(params)
+// you now have a signed request!
 ```
-
-## Installation
-
-If available on Hex this package can be added to your Gleam project:
-
-```sh
-gleam add sigv4
-```
-
-and its documentation can be found at <https://hexdocs.pm/sigv4>.
