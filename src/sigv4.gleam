@@ -10,6 +10,9 @@ import gleam/set
 import gleam/string
 import gleam/uri
 
+/// Configuration for the signing process.
+/// If `debug` is set, it will print CanonicalRequest, StringToSign and Signature values.
+/// For `datetime`, you should use the result of `erlang:universaltime()` call.
 pub type Params {
   Params(
     debug: Bool,
@@ -22,6 +25,7 @@ pub type Params {
   )
 }
 
+/// Datetime in ((Y, M, D), (H, M, S)) format.
 pub type Datetime =
   #(#(Int, Int, Int), #(Int, Int, Int))
 
@@ -54,6 +58,8 @@ fn format_dt(parts: List(Int)) -> String {
   |> string.concat
 }
 
+/// Run given request through the Signature Version 4 process with given params. This will add
+/// `Host`, `X-Amz-Content-Sha256`, `X-Amz-Date` and `Authorization` headers to the request.
 pub fn sign_request(request: Request(String), params: Params) -> Request(String) {
   // prepend new headers so the canonical request is correct
   let body_hash = hex_hash(request.body)
