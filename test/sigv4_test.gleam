@@ -27,7 +27,30 @@ external fn universaltime() -> sigv4.Datetime =
   "erlang" "universaltime"
 
 pub fn main() {
+  create_test_bucket()
   gleeunit.main()
+}
+
+fn create_test_bucket() {
+  let params = signing_params()
+  assert Ok(res) =
+    request.new()
+    |> request.set_scheme(http.Http)
+    |> request.set_host(host)
+    |> request.set_method(http.Put)
+    |> request.set_path("/bucket")
+    |> sigv4.sign_request(params)
+    |> hackney.send
+  case res.status {
+    200 -> Nil
+    409 ->
+      // bucket already exists
+      Nil
+    _ -> {
+      io.debug(res.status)
+      should.fail()
+    }
+  }
 }
 
 pub fn list_buckets_test() {
@@ -48,7 +71,6 @@ fn list_buckets_request(params: sigv4.Params) -> Request(String) {
   |> request.set_scheme(http.Http)
   |> request.set_host(host)
   |> request.set_path("/")
-  |> request.prepend_header("Accept-Encoding", "identity")
   |> sigv4.sign_request(params)
 }
 
@@ -63,4 +85,37 @@ pub fn signature_mismatch_test() {
   |> io.debug
   |> string.contains("SignatureDoesNotMatch")
   |> should.be_true()
+}
+
+pub fn put_object_test() {
+  let params = signing_params()
+  assert Ok(res) =
+    request.new()
+    |> request.set_scheme(http.Http)
+    |> request.set_host(host)
+    |> request.set_method(http.Put)
+    |> request.set_path("/bucket/fox.txt")
+    |> request.set_body("The quick brown fox jumps over the lazy dog.")
+    |> sigv4.sign_request(params)
+    |> hackney.send
+  res.status
+  |> should.equal(200)
+  res.body
+  |> should.equal("")
+}
+
+pub fn get_object_test() {
+  let params = signing_params()
+  assert Ok(res) =
+    request.new()
+    |> request.set_scheme(http.Http)
+    |> request.set_host(host)
+    |> request.set_method(http.Get)
+    |> request.set_path("/bucket/fox.txt")
+    |> sigv4.sign_request(params)
+    |> hackney.send
+  res.status
+  |> should.equal(200)
+  res.body
+  |> should.equal("The quick brown fox jumps over the lazy dog.")
 }
