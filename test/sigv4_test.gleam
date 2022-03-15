@@ -14,7 +14,7 @@ const host = "localhost:9008"
 fn signing_params() -> sigv4.Params {
   sigv4.Params(
     debug: False,
-    signed_headers: ["Host", "X-Amz-Content-Sha256", "X-Amz-Date"],
+    signed_headers: [],
     datetime: universaltime(),
     region: "us-east-1",
     service: "s3",

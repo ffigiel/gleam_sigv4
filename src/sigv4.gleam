@@ -58,6 +58,8 @@ fn format_dt(parts: List(Int)) -> String {
   |> string.concat
 }
 
+const mandatory_signed_headers = ["Host", "X-Amz-Content-Sha256", "X-Amz-Date"]
+
 /// Run given request through the Signature Version 4 process with given params. This will add
 /// `Host`, `X-Amz-Content-Sha256`, `X-Amz-Date` and `Authorization` headers to the request.
 pub fn sign_request(request: Request(String), params: Params) -> Request(String) {
@@ -69,9 +71,10 @@ pub fn sign_request(request: Request(String), params: Params) -> Request(String)
     |> request.prepend_header("X-Amz-Content-Sha256", body_hash)
     |> request.prepend_header("X-Amz-Date", datetime(params.datetime))
   let sorted_headers =
-    params.signed_headers
+    list.append(mandatory_signed_headers, params.signed_headers)
     |> list.map(string.lowercase)
     |> list.sort(string.compare)
+    |> list.unique
   let canonical_request = canonical_request(request, sorted_headers, body_hash)
   let signature_payload = signature_payload(canonical_request, params)
   let signature_key = signature_key(params)
