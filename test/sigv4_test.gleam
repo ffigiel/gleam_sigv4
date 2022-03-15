@@ -30,6 +30,19 @@ pub fn main() {
   gleeunit.main()
 }
 
+pub fn list_buckets_test() {
+  assert Ok(res) =
+    signing_params()
+    |> list_buckets_request
+    |> hackney.send
+  res.status
+  |> should.equal(200)
+  res.body
+  |> io.debug
+  |> string.contains("<ListAllMyBucketsResult")
+  |> should.be_true()
+}
+
 fn list_buckets_request(params: sigv4.Params) -> Request(String) {
   request.new()
   |> request.set_scheme(http.Http)
@@ -49,18 +62,5 @@ pub fn signature_mismatch_test() {
   res.body
   |> io.debug
   |> string.contains("SignatureDoesNotMatch")
-  |> should.be_true()
-}
-
-pub fn list_buckets_test() {
-  assert Ok(res) =
-    signing_params()
-    |> list_buckets_request
-    |> hackney.send
-  res.status
-  |> should.equal(200)
-  res.body
-  |> io.debug
-  |> string.contains("<ListAllMyBucketsResult")
   |> should.be_true()
 }
