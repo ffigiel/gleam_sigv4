@@ -24,24 +24,24 @@ pub type Params {
   )
 }
 
-/// Datetime in ((Y, M, D), (H, M, S)) format.
+/// Datetime in ((Y, M, D), (H, M, S)) format, like the one returned by `erlang:universaltime()`.
 pub type Datetime =
   #(#(Int, Int, Int), #(Int, Int, Int))
 
 /// encode datetime into the format used in aws signatures
-fn datetime(dt: Datetime) -> String {
-  string.concat([date(dt), "T", time(dt), "Z"])
+fn format_datetime(dt: Datetime) -> String {
+  string.concat([format_date(dt), "T", format_time(dt), "Z"])
 }
 
 /// encode date part into the format used in aws signatures
-fn date(dt: Datetime) -> String {
+fn format_date(dt: Datetime) -> String {
   let #(y, m, d) = dt.0
   [y, m, d]
   |> format_dt
 }
 
 /// encode time part into the format used in aws signatures
-fn time(dt: Datetime) -> String {
+fn format_time(dt: Datetime) -> String {
   let #(h, m, s) = dt.1
   [h, m, s]
   |> format_dt
@@ -68,7 +68,7 @@ pub fn sign_request(request: Request(String), params: Params) -> Request(String)
     request
     |> request.prepend_header("Host", request.host)
     |> request.prepend_header("X-Amz-Content-Sha256", body_hash)
-    |> request.prepend_header("X-Amz-Date", datetime(params.datetime))
+    |> request.prepend_header("X-Amz-Date", format_datetime(params.datetime))
   let sorted_headers =
     list.append(mandatory_signed_headers, params.signed_headers)
     |> list.map(string.lowercase)
@@ -159,7 +159,7 @@ external fn bits_to_hex_string(BitString) -> String =
   "base16" "encode"
 
 fn signature_payload(canonical_request: String, params: Params) -> BitString {
-  let isotime = datetime(params.datetime)
+  let isotime = format_datetime(params.datetime)
   let scope = signature_scope(params)
   let canonical_request_hash =
     canonical_request
@@ -170,7 +170,7 @@ fn signature_payload(canonical_request: String, params: Params) -> BitString {
 }
 
 fn signature_scope(params: Params) -> String {
-  [date(params.datetime), params.region, params.service, "aws4_request"]
+  [format_date(params.datetime), params.region, params.service, "aws4_request"]
   |> string.join("/")
 }
 
@@ -179,7 +179,7 @@ fn signature_key(params: Params) -> BitString {
     hmac256_str(
       string.concat(["AWS4", params.secret_key])
       |> bit_string.from_string,
-      date(params.datetime),
+      format_date(params.datetime),
     )
   let k_region = hmac256_str(k_date, params.region)
   let k_service = hmac256_str(k_region, params.service)
