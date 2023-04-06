@@ -23,3 +23,12 @@ let req =
   |> sigv4.sign_request(params)
 // you now have a signed request!
 ```
+
+## Development
+
+To run tests
+
+```sh
+docker-compose up
+gleam test
+```

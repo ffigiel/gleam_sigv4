@@ -10,6 +10,7 @@ import sigv4
 const host = "localhost:9008"
 
 fn signing_params() -> sigv4.Params {
+  // These settings are used to connect to the test minio instance
   sigv4.Params(
     debug: False,
     signed_headers: [],
