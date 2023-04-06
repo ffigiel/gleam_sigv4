@@ -31,7 +31,7 @@ pub fn main() {
 
 fn create_test_bucket() {
   let params = signing_params()
-  assert Ok(res) =
+  let assert Ok(res) =
     request.new()
     |> request.set_scheme(http.Http)
     |> request.set_host(host)
@@ -52,7 +52,7 @@ fn create_test_bucket() {
 }
 
 pub fn list_buckets_test() {
-  assert Ok(res) =
+  let assert Ok(res) =
     signing_params()
     |> list_buckets_request
     |> hackney.send
@@ -73,7 +73,7 @@ fn list_buckets_request(params: sigv4.Params) -> Request(String) {
 }
 
 pub fn signature_mismatch_test() {
-  assert Ok(res) =
+  let assert Ok(res) =
     sigv4.Params(..signing_params(), secret_key: "invalid")
     |> list_buckets_request
     |> hackney.send
@@ -87,7 +87,7 @@ pub fn signature_mismatch_test() {
 
 pub fn put_object_test() {
   let params = signing_params()
-  assert Ok(res) =
+  let assert Ok(res) =
     request.new()
     |> request.set_scheme(http.Http)
     |> request.set_host(host)
@@ -104,7 +104,7 @@ pub fn put_object_test() {
 
 pub fn get_object_test() {
   let params = signing_params()
-  assert Ok(res) =
+  let assert Ok(res) =
     request.new()
     |> request.set_scheme(http.Http)
     |> request.set_host(host)
