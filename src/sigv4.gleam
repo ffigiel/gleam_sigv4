@@ -80,8 +80,6 @@ pub fn sign_request(request: Request(String), params: Params) -> Request(String)
   let signature =
     crypto.hmac(signature_payload, crypto.Sha256, signature_key)
     |> bits_to_hex_string
-  let authorization_header =
-    authorization_header(params, sorted_headers, signature)
   case params.debug {
     True -> {
       io.println("CanonicalRequest:")
@@ -97,7 +95,9 @@ pub fn sign_request(request: Request(String), params: Params) -> Request(String)
     }
     _ -> Nil
   }
-  // finally, add the authorization header
+  // finally, construct and add the authorization header
+  let authorization_header =
+    authorization_header(params, sorted_headers, signature)
   request
   |> request.prepend_header("Authorization", authorization_header)
 }
