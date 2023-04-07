@@ -3,24 +3,31 @@ import gleam/crypto
 import gleam/http
 import gleam/http/request.{Request}
 import gleam/int
-import gleam/io
 import gleam/list
+import gleam/pair
 import gleam/result
 import gleam/string
 import gleam/uri
 
 /// Configuration for the signing process.
-/// If `debug` is set, it will print CanonicalRequest, StringToSign and Signature values.
-/// For `datetime`, you should use the result of `erlang:universaltime()` call.
+/// The `datetime`, should be the result of `erlang:universaltime()` call.
 pub type Params {
   Params(
-    debug: Bool,
     signed_headers: List(String),
     datetime: Datetime,
     region: String,
     service: String,
     access_key: String,
     secret_key: String,
+  )
+}
+
+/// Debug information returned by `sign_request_debug`.
+pub type DebugInfo {
+  DebugInfo(
+    canonical_request: String,
+    signature_payload: String,
+    signature: String,
   )
 }
 
@@ -62,6 +69,16 @@ const mandatory_signed_headers = ["Host", "X-Amz-Content-Sha256", "X-Amz-Date"]
 /// Run given request through the Signature Version 4 process with given params. This will add
 /// `Host`, `X-Amz-Content-Sha256`, `X-Amz-Date` and `Authorization` headers to the request.
 pub fn sign_request(request: Request(String), params: Params) -> Request(String) {
+  sign_request_debug(request, params)
+  |> pair.first
+}
+
+/// Works like `sign_request`, except it also returns some debug info to inspect the signing
+/// process.
+pub fn sign_request_debug(
+  request: Request(String),
+  params: Params,
+) -> #(Request(String), DebugInfo) {
   // prepend new headers so the canonical request is correct
   let body_hash = hex_hash(request.body)
   let request =
@@ -80,26 +97,21 @@ pub fn sign_request(request: Request(String), params: Params) -> Request(String)
   let signature =
     crypto.hmac(signature_payload, crypto.Sha256, signature_key)
     |> bits_to_hex_string
-  case params.debug {
-    True -> {
-      io.println("CanonicalRequest:")
-      io.println(canonical_request)
-      io.println("StringToSign:")
-      signature_payload
-      |> bit_string.to_string
-      |> result.unwrap("")
-      |> io.println
-      io.println("Signature:")
-      signature
-      |> io.println
-    }
-    _ -> Nil
-  }
   // finally, construct and add the authorization header
   let authorization_header =
     authorization_header(params, sorted_headers, signature)
-  request
-  |> request.prepend_header("Authorization", authorization_header)
+  let signed_request =
+    request
+    |> request.prepend_header("Authorization", authorization_header)
+  let debug_info =
+    DebugInfo(
+      canonical_request: canonical_request,
+      signature_payload: signature_payload
+      |> bit_string.to_string
+      |> result.unwrap(""),
+      signature: signature,
+    )
+  #(signed_request, debug_info)
 }
 
 fn canonical_request(
