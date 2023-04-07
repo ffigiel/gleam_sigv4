@@ -24,6 +24,13 @@ fn signing_params() -> sigv4.Params {
 external fn universaltime() -> sigv4.Datetime =
   "erlang" "universaltime"
 
+fn debug_log(label: String, value: a) -> a {
+  [label, ": ", string.inspect(value)]
+  |> string.concat
+  |> io.println
+  value
+}
+
 pub fn main() {
   create_test_bucket()
   gleeunit.main()
@@ -45,7 +52,7 @@ fn create_test_bucket() {
       // bucket already exists
       Nil
     _ -> {
-      io.debug(res.status)
+      debug_log("Response status", res.status)
       should.fail()
     }
   }
@@ -59,7 +66,7 @@ pub fn list_buckets_test() {
   res.status
   |> should.equal(200)
   res.body
-  |> io.debug
+  |> debug_log("Response body", _)
   |> string.contains("<ListAllMyBucketsResult")
   |> should.be_true()
 }
@@ -80,7 +87,7 @@ pub fn signature_mismatch_test() {
   res.status
   |> should.equal(403)
   res.body
-  |> io.debug
+  |> debug_log("Response body", _)
   |> string.contains("SignatureDoesNotMatch")
   |> should.be_true()
 }
