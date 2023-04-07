@@ -19,11 +19,11 @@ jobs:
         ports:
           - 9008:9000
     steps:
-      - uses: actions/checkout@v2.0.0
-      - uses: erlef/setup-beam@v1.9.0
+      - uses: actions/checkout@v3.5.0
+      - uses: erlef/setup-beam@v1.15.3
         with:
-          otp-version: "23.2"
-          gleam-version: "0.20.1"
+          otp-version: "25.3"
+          gleam-version: "0.28.1"
       - run: gleam format --check src test
       - run: gleam deps download
       - run: gleam test
